@@ -38,7 +38,7 @@ resource "ibm_is_vpc" "vpn_vpc" {
 resource "ibm_is_vpc_address_prefix" "vpn_prefix" {
   count = length(var.subnet_cidrs)
 
-  name = "${var.vpc_name}-prefix-${count.index + 1}"
+  name = "${var.vpc_name}-prefix"
   vpc  = ibm_is_vpc.vpn_vpc.id
   zone = var.zones[count.index]
   cidr = var.subnet_cidrs[count.index]
@@ -54,7 +54,7 @@ locals {
 resource "ibm_is_subnet" "vpn_subnet" {
   count = local.subnet_count
 
-  name            = "${var.vpc_name}-subnet-${count.index + 1}"
+  name            = "${var.vpc_name}-subnet"
   vpc             = ibm_is_vpc.vpn_vpc.id
   zone            = var.zones[count.index]
   ipv4_cidr_block = var.subnet_cidrs[count.index]
