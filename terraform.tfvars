@@ -25,8 +25,9 @@ cert_template_name   = "wdc-vpn-cert-template"
 
 cert_common_name       = "wdc-vpn.wf.ibmcloud"
 cert_organization      = "Wells Fargo Grid-aaS"
-cert_ca_validity_hours = 26280
-cert_validity_hours    = 26280
+cert_ca_validity_hours     = 26280   # Root CA + Intermediate CA : 3 years
+cert_server_validity_hours = 26280   # VPN server TLS cert       : 3 years
+cert_client_validity_hours = 4380    # VPN client cert (SM)      : 6 months
 
 security_group_name = "wdc-vpn-server-sg"
 vpn_port            = 443

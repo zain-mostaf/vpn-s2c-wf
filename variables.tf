@@ -125,15 +125,21 @@ variable "cert_organization" {
 }
 
 variable "cert_ca_validity_hours" {
-  description = "Validity period for the Root CA and Intermediate CA in hours (default 3 years = 26280 h)."
+  description = "Validity period for the Root CA and Intermediate CA in hours (default 3 years = 26280 h). Must be longer than all leaf cert validity periods."
   type        = number
   default     = 26280
 }
 
-variable "cert_validity_hours" {
-  description = "Validity period for issued leaf certificates in hours (default 90 days = 2160 h)."
+variable "cert_server_validity_hours" {
+  description = "Validity period for the VPN server TLS leaf certificate in hours (default 3 years = 26280 h). Should be long — rotating requires terraform apply."
   type        = number
   default     = 26280
+}
+
+variable "cert_client_validity_hours" {
+  description = "Validity period for the VPN client certificate issued by Secrets Manager in hours (default 6 months = 4380 h). IBM Cloud SM auto-rotates this before expiry."
+  type        = number
+  default     = 4380
 }
 
 ###############################################################################

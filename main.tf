@@ -200,7 +200,7 @@ resource "tls_locally_signed_cert" "server_cert" {
   ca_private_key_pem = tls_private_key.intermediate_ca_key.private_key_pem
   ca_cert_pem        = tls_locally_signed_cert.intermediate_ca_cert.cert_pem
 
-  validity_period_hours = var.cert_validity_hours
+  validity_period_hours = var.cert_server_validity_hours   # 3 years — long-lived server cert
 
   allowed_uses = [
     "key_encipherment",
@@ -297,7 +297,7 @@ resource "ibm_sm_private_certificate_configuration_template" "vpn_cert_template"
   name        = var.cert_template_name
 
   certificate_authority = ibm_sm_private_certificate_configuration_intermediate_ca.intermediate_ca.name
-  max_ttl               = "${var.cert_validity_hours}h"
+  max_ttl               = "${var.cert_client_validity_hours}h"   # 6 months — caps client cert TTL
   allow_any_name        = true
   enforce_hostnames     = false
   server_flag           = true
@@ -325,7 +325,7 @@ resource "ibm_sm_private_certificate" "vpn_client_cert" {
 
   certificate_template = ibm_sm_private_certificate_configuration_template.vpn_cert_template.name
   common_name          = "vpn-client.${var.cert_common_name}"
-  ttl                  = "${var.cert_validity_hours}h"
+  ttl                  = "${var.cert_client_validity_hours}h"    # 6 months
 
   depends_on = [
     ibm_sm_private_certificate_configuration_template.vpn_cert_template,
