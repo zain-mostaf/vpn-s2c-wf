@@ -1,0 +1,239 @@
+###############################################################################
+# Authentication
+###############################################################################
+variable "ibmcloud_api_key" {
+  description = "IBM Cloud API key. Prefer setting IC_API_KEY env var instead of hardcoding."
+  type        = string
+  sensitive   = true
+}
+
+###############################################################################
+# Region / Zone
+###############################################################################
+variable "region" {
+  description = "IBM Cloud region where all resources are deployed (e.g. us-south, eu-gb)."
+  type        = string
+  default     = "us-east"
+}
+
+variable "zones" {
+  description = <<-EOT
+    List of availability zones for HA VPN deployment.
+    Provide 2 zones for High Availability mode (2 subnets), 1 zone for Standalone mode.
+  EOT
+  type        = list(string)
+  default     = ["us-east-1"]
+}
+
+###############################################################################
+# Resource Group
+###############################################################################
+variable "resource_group_name" {
+  description = "Name of the IBM Cloud Resource Group to create and use for all resources."
+  type        = string
+  default     = "hpc_prod"
+}
+
+###############################################################################
+# VPC
+###############################################################################
+variable "vpc_name" {
+  description = "Name of the Virtual Private Cloud (VPC)."
+  type        = string
+  default     = "wdccom-vpc-common"
+}
+
+variable "vpc_address_prefix" {
+  description = "Address prefix CIDR for the VPC (must NOT overlap with client_ip_pool)."
+  type        = string
+  default     = "192.0.2.0/24"
+}
+
+###############################################################################
+# Subnets (HA — 2 subnets across 2 zones)
+###############################################################################
+variable "subnet_mode" {
+  description = "Deployment mode: 'ha' provisions 2 subnets (High Availability), 'standalone' provisions 1 subnet."
+  type        = string
+  default     = "standalone"
+
+  validation {
+    condition     = contains(["ha", "standalone"], var.subnet_mode)
+    error_message = "subnet_mode must be either 'ha' or 'standalone'."
+  }
+}
+
+variable "subnet_cidrs" {
+  description = <<-EOT
+    CIDR blocks for the VPN subnets.
+    HA mode   → provide 2 CIDRs (one per zone).
+    Standalone → provide 1 CIDR.
+  EOT
+  type        = list(string)
+  default     = ["192.0.2.0/24"]
+}
+
+###############################################################################
+# IBM Secrets Manager
+###############################################################################
+variable "secrets_manager_name" {
+  description = "Name of the IBM Cloud Secrets Manager instance."
+  type        = string
+  default     = "common-secrets-manager"
+}
+
+variable "secrets_manager_plan" {
+  description = "Pricing plan for Secrets Manager: 'standard' or 'trial'."
+  type        = string
+  default     = "standard"
+}
+
+###############################################################################
+# Private Certificate Engine — names registered in Secrets Manager
+###############################################################################
+variable "root_ca_name" {
+  description = "Name for the Root CA configuration in the Secrets Manager Private Certificate engine."
+  type        = string
+  default     = "wdc-vpn-root-ca"
+}
+
+variable "intermediate_ca_name" {
+  description = "Name for the Intermediate CA configuration in the Secrets Manager Private Certificate engine."
+  type        = string
+  default     = "wdc-vpn-intermediate-ca"
+}
+
+variable "cert_template_name" {
+  description = "Name for the certificate template in the Secrets Manager Private Certificate engine."
+  type        = string
+  default     = "wdc-vpn-cert-template"
+}
+
+###############################################################################
+# Certificates — common subject fields
+###############################################################################
+variable "cert_common_name" {
+  description = "Common Name (CN) used in the generated TLS certificates."
+  type        = string
+  default     = "wdc-vpn.wf.ibmcloud"
+}
+
+variable "cert_organization" {
+  description = "Organization (O) field used in the generated TLS certificates."
+  type        = string
+  default     = "Wells Fargo Grid-aaS"
+}
+
+variable "cert_ca_validity_hours" {
+  description = "Validity period for the Root CA and Intermediate CA in hours (default 3 years = 26280 h)."
+  type        = number
+  default     = 26280
+}
+
+variable "cert_validity_hours" {
+  description = "Validity period for issued leaf certificates in hours (default 90 days = 2160 h)."
+  type        = number
+  default     = 26280
+}
+
+###############################################################################
+# Security Group
+###############################################################################
+variable "security_group_name" {
+  description = "Name of the security group attached to the VPN server."
+  type        = string
+  default     = "wdc-vpn-server-sg"
+}
+
+variable "vpn_port" {
+  description = "UDP (or TCP) port the VPN server listens on."
+  type        = number
+  default     = 443
+}
+
+variable "vpn_protocol" {
+  description = "Transport protocol for VPN traffic: 'udp' (recommended) or 'tcp'."
+  type        = string
+  default     = "tcp"
+}
+
+###############################################################################
+# VPN Server
+###############################################################################
+variable "vpn_server_name" {
+  description = "Name of the Client-to-Site VPN server."
+  type        = string
+  default     = "wdc-vpn-client-to-site"
+}
+
+variable "client_ip_pool" {
+  description = "IPv4 CIDR block for VPN client IP address assignment. Must NOT overlap with VPC address space."
+  type        = string
+  default     = "192.168.32.0/22"
+}
+
+variable "client_dns_server_ips" {
+  description = <<-EOT
+    DNS server IPs pushed to VPN clients.
+    IBM Cloud private DNS: 161.26.0.7 and 161.26.0.8.
+  EOT
+  type        = list(string)
+  default     = ["161.26.0.7", "161.26.0.8"]
+}
+
+variable "enable_split_tunneling" {
+  description = "Enable split tunnel mode (true) — only VPC-destined traffic goes through VPN."
+  type        = bool
+  default     = true
+}
+
+variable "client_idle_timeout" {
+  description = "Idle timeout in seconds before a VPN client session is disconnected. 0 = no timeout."
+  type        = number
+  default     = 7200
+}
+
+###############################################################################
+# VPN Routes — subnets to advertise through the tunnel
+###############################################################################
+variable "vpn_routes" {
+  description = <<-EOT
+    List of routes to advertise to connected VPN clients.
+    Each entry needs a 'name' and 'destination' CIDR.
+  EOT
+  type = list(object({
+    name        = string
+    destination = string
+  }))
+  default = [
+    {
+      name        = "vpc-private-subnet-1"
+      destination = "192.0.2.0/24"
+    },
+    {
+      name        = "vpc-private-subnet-2"
+      destination = "192.0.2.0/24"
+    }
+  ]
+}
+
+###############################################################################
+# Authentication Mode
+###############################################################################
+variable "client_auth_methods" {
+  description = <<-EOT
+    Authentication methods for VPN clients.
+    Supported: 'certificate' and/or 'username' (IBMid).
+  EOT
+  type        = list(string)
+  default     = ["certificate", "username"]
+}
+
+###############################################################################
+# Tags
+###############################################################################
+variable "tags" {
+  description = "List of tags to attach to all provisioned resources."
+  type        = list(string)
+  default     = ["vpn", "client-to-site", "wells-fargo", "grid-aas", "Schematics"]
+}
