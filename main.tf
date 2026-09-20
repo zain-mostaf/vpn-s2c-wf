@@ -268,6 +268,10 @@ resource "ibm_sm_private_certificate_configuration_root_ca" "root_ca" {
   organization = [var.cert_organization]
   max_ttl      = "${var.cert_ca_validity_hours}h"
 
+  # Encode the issuing CA URL in certificates issued by this CA.
+  # Required for the private CA chain used by Client-to-Site VPN.
+  issuing_certificates_urls_encoded = true
+
   depends_on = [time_sleep.wait_for_secrets_manager]
 }
 
@@ -281,6 +285,10 @@ resource "ibm_sm_private_certificate_configuration_intermediate_ca" "intermediat
   max_ttl        = "${var.cert_ca_validity_hours}h"
   signing_method = "internal"
   issuer         = ibm_sm_private_certificate_configuration_root_ca.root_ca.name
+
+  # Encode the issuing CA URL in certificates issued by this CA.
+  # Required for the private CA chain used by Client-to-Site VPN.
+  issuing_certificates_urls_encoded = true
 
   depends_on = [ibm_sm_private_certificate_configuration_root_ca.root_ca]
 }
