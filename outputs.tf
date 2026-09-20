@@ -7,12 +7,12 @@
 ###############################################################################
 output "resource_group_id" {
   description = "ID of the provisioned Resource Group."
-  value       = ibm_resource_group.vpn_rg.id
+  value = data.ibm_resource_group.vpn_rg.id
 }
 
 output "resource_group_name" {
   description = "Name of the provisioned Resource Group."
-  value       = ibm_resource_group.vpn_rg.name
+   value = data.ibm_resource_group.vpn_rg.name
 }
 
 ###############################################################################
