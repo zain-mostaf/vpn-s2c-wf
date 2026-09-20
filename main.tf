@@ -15,11 +15,10 @@
 ###############################################################################
 
 ###############################################################################
-# 1. RESOURCE GROUP
+# 1. RESOURCE GROUP — data source (group already exists, not managed by Terraform)
 ###############################################################################
-resource "ibm_resource_group" "vpn_rg" {
+data "ibm_resource_group" "vpn_rg" {
   name = var.resource_group_name
-  tags = var.tags
 }
 
 ###############################################################################
@@ -27,11 +26,9 @@ resource "ibm_resource_group" "vpn_rg" {
 ###############################################################################
 resource "ibm_is_vpc" "vpn_vpc" {
   name                      = var.vpc_name
-  resource_group            = ibm_resource_group.vpn_rg.id
+  resource_group            = data.ibm_resource_group.vpn_rg.id
   address_prefix_management = "manual"
   tags                      = var.tags
-
-  depends_on = [ibm_resource_group.vpn_rg]
 }
 
 # VPC Address Prefixes — one per zone used
