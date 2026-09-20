@@ -55,7 +55,7 @@ resource "ibm_is_subnet" "vpn_subnet" {
   vpc             = ibm_is_vpc.vpn_vpc.id
   zone            = var.zones[count.index]
   ipv4_cidr_block = var.subnet_cidrs[count.index]
-  resource_group  = ibm_resource_group.vpn_rg.id
+  resource_group  =  data.ibm_resource_group.vpn_rg.id
   tags            = var.tags
 
   depends_on = [ibm_is_vpc_address_prefix.vpn_prefix]
@@ -74,7 +74,7 @@ resource "ibm_resource_instance" "secrets_manager" {
     "service-endpoints" = "public-and-private"
     "allowed_network"   = "public-and-private"
   }
-  resource_group_id = ibm_resource_group.vpn_rg.id
+  resource_group_id =  data.ibm_resource_group.vpn_rg.id
   tags              = var.tags
 
   timeouts {
@@ -337,7 +337,7 @@ resource "ibm_sm_private_certificate" "vpn_client_cert" {
 resource "ibm_is_security_group" "vpn_sg" {
   name           = var.security_group_name
   vpc            = ibm_is_vpc.vpn_vpc.id
-  resource_group = ibm_resource_group.vpn_rg.id
+  resource_group =  data.ibm_resource_group.vpn_rg.id
   tags           = var.tags
 }
 
@@ -385,7 +385,7 @@ resource "ibm_is_security_group_rule" "vpn_inbound_icmp" {
 ###############################################################################
 resource "ibm_is_vpn_server" "vpn_server" {
   name           = var.vpn_server_name
-  resource_group = ibm_resource_group.vpn_rg.id
+  resource_group =  data.ibm_resource_group.vpn_rg.id
   tags           = var.tags
 
   # ── Network ──────────────────────────────────────────────────────────────
